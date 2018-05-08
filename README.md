@@ -30,3 +30,8 @@ Spider use items whils scraping. Those are define in **/items/Article.py** file.
 
 The file **settings_SAMPLE.py** define the behavior of all bots in the project and store private information about Amazon Web Services.
 Please take care to fill the bank with your own and rename the file **settings.py**.
+
+## Documentation
+Here is [Scrapy](https://doc.scrapy.org/en/latest/index.html) and [Boto3](https://boto3.readthedocs.io/en/latest/) documentation.
+
+
