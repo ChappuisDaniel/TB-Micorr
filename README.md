@@ -5,7 +5,7 @@ This repo contains the source code for bots using Scrapy. Their goal is to crawl
 To use them, follow the steps bellow.
 
 ## Installation
-On Windows we need to install a Python environment. [Miniconda[(https://conda.io/miniconda.html) work perfectly fine for the job.
+On Windows we need to install a Python environment. [Miniconda](https://conda.io/miniconda.html) work perfectly fine for the job.
 Once it is installed, run the Anaconda Prompt and the followings commands to install Scrapy framework and the needed Boto3 library for AWS.
 
 > conda install -c conda-forge scrapy 
@@ -28,5 +28,5 @@ All the bot behavior code are under **/spiders/** folder. The only spider workin
 
 Spider use items whils scraping. Those are define in **/items/Article.py** file.
 
-The file **settings.py** define the behavior of all bots in the project and store private information about Amazon Web Services.
-Please take care to fill the bank with your own.
+The file **settings_SAMPLE.py** define the behavior of all bots in the project and store private information about Amazon Web Services.
+Please take care to fill the bank with your own and rename the file **settings.py**.
