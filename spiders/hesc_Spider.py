@@ -42,7 +42,7 @@ class hesc_Spider(CrawlSpider):
 			article['abstract'] =  a.css('section.Abstract p.Para::text').extract_first()
 			article['releaseDate'] = a.css('div.ArticleHistory p.HistoryOnlineDate::text').extract_first()
 			article['articleType'] = a.css('div.ArticleCategory::text').extract_first()
-			article['fullText'] = a.css('div.FulltextWrapper section').extract_first()
+			article['fullText'] = a.css('div.FulltextWrapper section').extract()
 			article['fileURL'] = a.xpath('//a[@id="articlePdf"]/@href').extract_first()
 			article['lastUpdate'] = datetime.date.today()
 
