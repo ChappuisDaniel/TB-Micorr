@@ -2,8 +2,7 @@ import scrapy
 
 class Article(scrapy.Item):
     title = scrapy.Field()
-    snippet = scrapy.Field()
-    author = scrapy.Field()
+    authors = scrapy.Field()
     abstract = scrapy.Field()
     releaseDate = scrapy.Field()
     articleType = scrapy.Field()

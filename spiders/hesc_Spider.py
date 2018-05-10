@@ -18,7 +18,8 @@ class hesc_Spider(CrawlSpider):
 
 	# Boto3 session for S3.
 	session = botocore.session.get_session()
-	client = session.create_client('s3', region_name='eu-central-1')
+	# Has to be in us-east where CloudSearch is avilable.
+	client = session.create_client('s3', region_name='us-east-1a')
 
 	# Page with list of article links
 	start_urls = ['https://heritagesciencejournal.springeropen.com/articles']
@@ -36,13 +37,13 @@ class hesc_Spider(CrawlSpider):
 		for a in response.css('main.c-content-layout__main'):
 
 			# Extract metadata.
-			article['title'] = a.css('h1.ArticleTitle').extract()
-			article['author'] = a.css('div.AuthorNames li span.AuthorName::text').extract()
-			article['abstract'] =  a.css('section.Abstract p.Para::text').extract()
-			article['releaseDate'] = a.css('div.ArticleHistory p.HistoryOnlineDate::text').extract()
-			article['articleType'] = a.css('div.ArticleCategory::text').extract()
-			article['fullText'] = a.css('div.FulltextWrapper section').extract()
-			article['fileURL'] = a.xpath('//a[@id="articlePdf"]/@href').extract()
+			article['title'] = a.css('h1.ArticleTitle').extract_first()
+			article['authors'] = a.css('div.AuthorNames li span.AuthorName::text').extract()
+			article['abstract'] =  a.css('section.Abstract p.Para::text').extract_first()
+			article['releaseDate'] = a.css('div.ArticleHistory p.HistoryOnlineDate::text').extract_first()
+			article['articleType'] = a.css('div.ArticleCategory::text').extract_first()
+			article['fullText'] = a.css('div.FulltextWrapper section').extract_first()
+			article['fileURL'] = a.xpath('//a[@id="articlePdf"]/@href').extract_first()
 			article['lastUpdate'] = datetime.date.today()
 
 			# This line push the item through the pipeline.
