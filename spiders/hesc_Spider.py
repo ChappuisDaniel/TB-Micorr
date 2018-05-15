@@ -38,11 +38,11 @@ class hesc_Spider(CrawlSpider):
 
 			# Extract metadata.
 			article['title'] = a.css('h1.ArticleTitle').extract_first()
-			article['authors'] = a.css('div.AuthorNames li span.AuthorName::text').extract()
-			article['abstract'] =  a.css('section.Abstract p.Para::text').extract_first()
-			article['releaseDate'] = a.css('div.ArticleHistory p.HistoryOnlineDate::text').extract_first()
-			article['articleType'] = a.css('div.ArticleCategory::text').extract_first()
-			article['fullText'] = a.css('div.FulltextWrapper section').extract()
+			article['authors'] = a.css('div.AuthorNames li span.AuthorName').extract()
+			article['abstract'] =  a.css('section.Abstract *.Para').extract_first()
+			article['releaseDate'] = a.css('div.ArticleHistory p.HistoryOnlineDate').extract_first()
+			article['articleType'] = a.css('div.ArticleCategory').extract_first()
+			article['fullText'] = a.css('div.FulltextWrapper section').extract_first()
 			article['fileURL'] = a.xpath('//a[@id="articlePdf"]/@href').extract_first()
 			article['lastUpdate'] = datetime.date.today()
 
@@ -62,8 +62,9 @@ class hesc_Spider(CrawlSpider):
 			fullText_page = a.css('li a::attr(href)').extract()[1]
 			if fullText_page is not None:
 				yield scrapy.Request(self.BASE_URL + fullText_page, self.prase_fullText, dont_filter=True)
-
+"""
 		# Go to the next page is there is any.
 		next_page = response.css('a.c-search-navbar__pagination-link--next::attr(href)').extract_first()
 		if next_page is not None:
 			yield scrapy.Request(self.BASE_URL + next_page, self.parse, dont_filter=True)
+"""
