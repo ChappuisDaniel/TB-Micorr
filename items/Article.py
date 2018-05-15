@@ -9,3 +9,4 @@ class Article(scrapy.Item):
     fullText = scrapy.Field()
     fileURL = scrapy.Field()
     lastUpdate = scrapy.Field()
+    topics = scrapy.Field()

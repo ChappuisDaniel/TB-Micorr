@@ -2,12 +2,14 @@ import scrapy
 from scrapy.spiders import CrawlSpider
 
 import datetime
+import json
 
 # Import de la class Item Article.
 from micorr_crawlers.items.Article import Article
 
 # AWS API services
 import botocore.session
+import boto3
 
 class hesc_Spider(CrawlSpider):
 
@@ -45,6 +47,11 @@ class hesc_Spider(CrawlSpider):
 			article['fullText'] = a.css('div.FulltextWrapper section').extract_first()
 			article['fileURL'] = a.xpath('//a[@id="articlePdf"]/@href').extract_first()
 			article['lastUpdate'] = datetime.date.today()
+
+			# Use comprehend to add key phrases objects
+			comprehend = boto3.client(service_name='comprehend', region_name='us-east-1')
+
+			article["topics"] = comprehend.detect_key_phrases(Text=article["abstract"], LanguageCode='en')
 
 			# This line push the item through the pipeline.
 			yield article
