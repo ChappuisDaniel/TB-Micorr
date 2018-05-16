@@ -53,16 +53,15 @@ class hesc_Spider(CrawlSpider):
 			article['releaseDate'] = a.css('div.ArticleHistory p.HistoryOnlineDate::text').extract_first()
 			article['articleType'] = a.css('div.ArticleCategory::text').extract_first()
 
-			# Still have issues with fulltext treatment. Currently extract only the abstract for analysis and retrival.
-			#soup = BeautifulSoup(a.css('div.FulltextWrapper').extract(), 'html.parser')
-			#article['fullText'] = soup.get_text()
-			article['fullText'] = a.css('div.FulltextWrapper section').extract_first()
+			soup = BeautifulSoup(a.css('main').extract_first(), 'html.parser')
+			article['fullText'] = soup.get_text()
 
 			article['fileURL'] = a.xpath('//a[@id="articlePdf"]/@href').extract_first()
 			article['lastUpdate'] = datetime.date.today()
 
 			# Use comprehend to add key phrases objects
 			comprehend = boto3.client(service_name='comprehend', region_name='us-east-1')
+			# fullText is too long to be used in AWS Comprehend. Use abstract instead.
 			article["topics"] = comprehend.detect_key_phrases(Text=article["abstract"], LanguageCode='en')
 
 			# This line push the item through the pipeline.
