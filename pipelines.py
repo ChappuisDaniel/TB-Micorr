@@ -14,7 +14,7 @@ class MicorrPipeline(object):
         """
 
         # Test fullText attribut
-        if item['fullText']:
+        if item['abstract'] and item["topics"]:
             # If one is setted, item is passed through.
             return item
         else:
