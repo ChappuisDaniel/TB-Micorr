@@ -53,10 +53,10 @@ class hesc_Spider(CrawlSpider):
 			article['releaseDate'] = a.css('div.ArticleHistory p.HistoryOnlineDate::text').extract_first()
 			article['articleType'] = a.css('div.ArticleCategory::text').extract_first()
 
+			# Still have issues with fulltext treatment. Currently extract only the abstract for analysis and retrival.
 			#soup = BeautifulSoup(a.css('div.FulltextWrapper').extract(), 'html.parser')
 			#article['fullText'] = soup.get_text()
-
-			article['fullText'] = a.css('div.FulltextWrapper section').extract()
+			article['fullText'] = a.css('div.FulltextWrapper section').extract_first()
 
 			article['fileURL'] = a.xpath('//a[@id="articlePdf"]/@href').extract_first()
 			article['lastUpdate'] = datetime.date.today()
@@ -81,9 +81,8 @@ class hesc_Spider(CrawlSpider):
 			fullText_page = a.css('li a::attr(href)').extract()[1]
 			if fullText_page is not None:
 				yield scrapy.Request(self.BASE_URL + fullText_page, self.prase_fullText, dont_filter=True)
-"""
+
 		# Go to the next page is there is any.
 		next_page = response.css('a.c-search-navbar__pagination-link--next::attr(href)').extract_first()
 		if next_page is not None:
 			yield scrapy.Request(self.BASE_URL + next_page, self.parse, dont_filter=True)
-"""
