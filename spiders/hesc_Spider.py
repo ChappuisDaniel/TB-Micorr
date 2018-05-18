@@ -69,7 +69,7 @@ class hesc_Spider(CrawlSpider):
 
 	def parse(self, response):
 		"""
-		Parse the main pages and fetch fullText pageself.
+		Parse the main pages and fetch fullText page.
 		Each article page is callback through parse_fulltext.
 		"""
 
