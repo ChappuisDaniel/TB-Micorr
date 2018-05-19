@@ -21,7 +21,7 @@ Installation is ready.
 ## Configuration AWSCLI
 AWSCLI is needed to allow our robot to call for Amazon Services.
 
-> pip install awscli
+> conda install -c conda-forge awscli
 
 When the installation is completed, run the following command to add AWS creditentials. Ensure an AWS user with required acces is  created before.
 
