@@ -64,12 +64,14 @@ class hesc_Spider(CrawlSpider):
 			# fullText is too long to be used in AWS Comprehend. Use abstract instead.
 			article["topics"] = comprehend.detect_key_phrases(Text=article["abstract"], LanguageCode='en')
 
+			article['keyWords'] = a.css('span.Keyword::text').extract()
+
 			# This line push the item through the pipeline.
 			yield article
 
 	def parse(self, response):
 		"""
-		Parse the main pages and fetch fullText pageself.
+		Parse the main pages and fetch fullText page.
 		Each article page is callback through parse_fulltext.
 		"""
 

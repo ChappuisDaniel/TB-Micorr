@@ -14,9 +14,9 @@ class MicorrPipeline(object):
         """
 
         # Test fullText attribut
-        if item['abstract'] and item["topics"]:
+        if 'title' in item:
             # If one is setted, item is passed through.
             return item
         else:
             # Else it is droped.
-            raise DropItem("fullText not aviable")
+            raise DropItem("Item integrity compromised.")
