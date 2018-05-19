@@ -12,7 +12,20 @@ Once it is installed, run the Anaconda Prompt and the followings commands to ins
 
 > conda install -c anaconda boto3 
 
+We need to install BeatifulSoup Library. It is use to clean fetched data of all HTML tags and clean the text we'll submit to AWS Comprehend.
+
+> pip install beautifulsoup4
+
 Installation is ready.
+
+## Configuration AWSCLI
+AWSCLI is needed to allow our robot to call for Amazon Services.
+
+> pip install awscli
+
+When the installation is completed, run the following command to add AWS creditentials. Ensure an AWS user with required acces is  created before.
+
+> aws configure
 
 ## Setup
 We need to create a blank project to provide the basic structure. Simply run:
