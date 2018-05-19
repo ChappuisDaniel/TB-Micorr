@@ -8,5 +8,6 @@ class Article(scrapy.Item):
     articleType = scrapy.Field()
     fullText = scrapy.Field()
     fileURL = scrapy.Field()
-    lastUpdate = scrapy.Field()
+    keyWords = scrapy.Field()
     topics = scrapy.Field()
+    lastUpdate = scrapy.Field()
