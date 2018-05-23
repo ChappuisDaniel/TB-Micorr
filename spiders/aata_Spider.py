@@ -1,17 +1,21 @@
-import os, json, io, datetime
-from RISparser import readris
+import os, io, datetime, re, json
 
+# Scrapy Libraries
 import scrapy
 from scrapy.spiders import CrawlSpider
 
-from bs4 import BeautifulSoup
-
-# Import de la class Item Article.
-from micorr_crawlers.items.Article import Article
+from selenium import webdriver
 
 # AWS API services
 import botocore.session
 import boto3
+
+# Import de la class Item Article.
+from micorr_crawlers.items.Article import Article, Fields
+
+# RIS parser from : https://github.com/MrTango/RISparser
+from RISparser import readris
+
 
 class aata_Spider(CrawlSpider):
 
@@ -19,124 +23,125 @@ class aata_Spider(CrawlSpider):
 	# http://aata.getty.edu
 	name = "aata"
 	allowed_domains = ['aata.getty.edu']
+	# Page with list of article links
+	start_urls = ['http://aata.getty.edu/Home']
+	# Base URL use for bot's navigation
+	BASE_URL = 'http://aata.getty.edu'
 
 	# Boto3 session for S3.
 	session = botocore.session.get_session()
 	# Has to be in us-east where CloudSearch is avilable.
-	client = session.create_client('s3', region_name='us-east-1')
+	client = session.create_client(service_name='s3', region_name='us-east-1')
+	#comprehend = boto3.client(service_name='comprehend', region_name='us-east-1')
 
-	# Page with list of article links
-	start_urls = ['http://aata.getty.edu/Home']
-	# Form input; Categories : (AATA)G9
+	def __init__(self):
 
-	# Base URL use for bot's navigation
-	BASE_URL = 'http://aata.getty.edu'
+		profile = webdriver.FirefoxProfile()
+		profile.set_preference('browser.download.folderList', 2) # custom location
+		profile.set_preference('browser.download.manager.showWhenStarting', False)
+		profile.set_preference('browser.download.dir', '/tmp')
+		profile.set_preference('browser.helperApps.neverAsk.saveToDisk', 'text/ris')
 
-	def prase_fullText(self, response):
-		"""
-		Parse fullText article page and fetch data.
-		Each items are processed into the ITEM_PIPELINES before save.
-		"""
-		raise CloseSpider('Not Implemented yet.')
+		browser = webdriver.Firefox(profile)
 
-		# Open article
-		article = Article()
-		for a in response.css('tr td'):
-
-			# Extract metadata.
-			article['fileURL'] = a.css('span::text').extract_first()
-			article['fullText'] = a.css('a::text').extract_first()
-			article['abstract'] = '1'
-			article['topics'] = '1'
-
-			# This line push the item through the pipeline.
-			yield article
-
-	def parse_browse(self, response):
-		"""
-		Parse the main pages and fetch fullText page.
-		Each article page is callback through parse_fulltext.
-		"""
-		raise CloseSpider('Not Implemented yet.')
-
-		data = {
-			'__VIEWSTATE': response.css('input#__VIEWSTATE::attr(value)').extract_first(),
-			'__EVENTTARGET': 'ctl00$MainContent$ctlNav$TreeViewTOC',
-			'__EVENTARGUMENT': "sAATA\\tocG\G_9\\G_9_1",
-			'__VIEWSTATEGENERATOR': response.css('input#__VIEWSTATEGENERATOR::attr(value)').extract_first(),
-			'__EVENTVALIDATION': response.css('input#__EVENTVALIDATION::attr(value)').extract_first()
-		}
-
-		yield scrapy.FormRequest(url=self.BASE_URL + '/Browse',
-									method='POST',
-									formdata=data,
-									dont_filter=True,
-									callback=self.prase_fullText
-								)
 
 	def parse(self, response):
+		self.driver.get('http://aata.getty.edu/Home')
+
+		next = self.driver.find_element_by_xpath('/Home')
+		next.open()
+
+		next = self.driver.find_element_by_xpath("//div[@id='NavigationMenu']/ul/li[2]/a/img")
+		next.click()
+		time.sleep(2.5)
+
+		next = self.driver.find_element_by_xpath('css=img[alt="Expand G. Materials and objects: analysis, treatment and techniques"]')
+		next.click()
+		time.sleep(2.5)
+
+		next = self.driver.find_element_by_xpath('css=img[alt="Expand 9. Metals and metallurgical by-products"]')
+		next.click()
+		time.sleep(2.5)
+
+		next = self.driver.find_element_by_xpath('id=MainContent_ctlNav_TreeViewTOCt50')
+		next.click()
+		time.sleep(2.5)
+
+		next = self.driver.find_element_by_xpath('id=MainContent_chkSelectAll')
+		next.click()
+		time.sleep(2.5)
+
+		next = self.driver.find_element_by_xpath('id=MainContent_lbDownload')
+		next.click()
+		time.sleep(5)
+
+		self.parse_ris
+
+		self.driver.close()
+
+	def parse_ris(self):
 		"""
 		Simulate scraping AATA sources.
 		Parse the .ris file into formated data and push on S3.
 		"""
 
-		filepath = 'Abstracts.ris'
+		filepath = 'tmp/Abstracts.ris'
 
 		with open(filepath, 'r', encoding="utf-8") as bibliography_file:
 			entries = readris(bibliography_file)
 
 			for entry in entries:
 
-				#Map enries inton article.
+				#Map enries into article.
 				article = Article()
+				fields = Fields()
 
-				# Extract metadata.
+
+				if 'accession_number' in entry:
+					article['id'] = re.sub('[\s+]', '', entry['accession_number'])
+
+				# Add title
 				if 'translated_title' in entry:
-					article['title'] = entry['translated_title']
+					fields['title'] = entry['translated_title']
 				else:
-					article['title'] = entry['title']
+					fields['title'] = entry['title']
 
+				# Add authors
 				if 'authors' in entry:
-					article['authors'] = entry['authors']
+					fields['authors'] = entry['authors']
 
+				# Add abstract
 				if 'abstract' in entry:
-					article['abstract'] = entry['abstract']
+					fields['abstract'] = entry['abstract']
+
+					# Add key phrases
 					# Use comprehend to add key phrases objects
-					comprehend = boto3.client(service_name='comprehend', region_name='us-east-1')
+
 					# fullText is too long to be used in AWS Comprehend. Use abstract instead.
-					article["topics"] = comprehend.detect_key_phrases(Text=article["abstract"], LanguageCode='en')
+					#article["topics"] = comprehend.detect_key_phrases(Text=article["abstract"], LanguageCode='en')
 
+				# Add year of publishing
 				if 'year' in entry:
-					article['releaseDate'] = entry['year']
+					fields['release_date'] = entry['year']
 
+				# Add type of article
 				if 'type_of_reference' in entry:
-					article['articleType'] = entry['type_of_reference']
+					fields['article_type'] = entry['type_of_reference']
 
-				article['fullText'] = 'none'
-				article['fileURL'] = 'none'
+				article['fulltext'] = 'none'
+				article['file_url'] = 'none'
 
+				# There is no need to add empty field for indexing.
+
+				# Add keywords
 				if 'keywords' in entry:
-					article['keyWords'] = entry['keywords']
+					fields['keywords'] = entry['keywords']
 
-				article['lastUpdate'] = datetime.date.today()
+				# Add last time fetched by bot.
+				fields['last_update'] = datetime.date.today()
+
+				# Merge field to article. Requied structure of file for CloudSearch.
+				article['fields'] = fields
 
 				# This line push the item through the pipeline.
 				yield article
-
-		"""
-		raise CloseSpider('Not Implemented yet.')
-		data = {
-			'__VIEWSTATE': response.css('input#__VIEWSTATE::attr(value)').extract_first(),
-			'__EVENTTARGET': 'ctl00$NavigationMenu',
-			'__EVENTARGUMENT': 'Browse',
-			'__VIEWSTATEGENERATOR': response.css('input#__VIEWSTATEGENERATOR::attr(value)').extract_first(),
-			'__EVENTVALIDATION': response.css('input#__EVENTVALIDATION::attr(value)').extract_first()
-		}
-
-		yield scrapy.FormRequest(url=self.BASE_URL + '/Browse',
-									method='POST',
-									formdata=data,
-									dont_filter=True,
-									callback=self.parse_browse
-								)
-		"""
