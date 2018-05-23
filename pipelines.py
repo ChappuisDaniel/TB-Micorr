@@ -14,8 +14,9 @@ class MicorrPipeline(object):
         """
 
         # Test fullText attribut
-        if 'title' in item:
+        if 'id' in item:
             # If one is setted, item is passed through.
+            item['type'] = 'add'
             return item
         else:
             # Else it is droped.
