@@ -7,11 +7,14 @@ from scrapy.spiders import CrawlSpider
 from bs4 import BeautifulSoup
 
 # Import de la class Item Article.
-from micorr_crawlers.items.Article import Article
+from micorr_crawlers.items.Article import Article, Fields
 
 # AWS API services
 import botocore.session
 import boto3
+
+import re
+
 
 class aata_Spider(CrawlSpider):
 
@@ -87,38 +90,54 @@ class aata_Spider(CrawlSpider):
 
 			for entry in entries:
 
-				#Map enries inton article.
+				#Map enries into article.
 				article = Article()
+				fields = Fields()
 
-				# Extract metadata.
+
+				if 'accession_number' in entry:
+					article['id'] = re.sub('[\s+]', '', entry['accession_number'])
+
+				# Add title
 				if 'translated_title' in entry:
-					article['title'] = entry['translated_title']
+					fields['title'] = entry['translated_title']
 				else:
-					article['title'] = entry['title']
+					fields['title'] = entry['title']
 
+				# Add authors
 				if 'authors' in entry:
-					article['authors'] = entry['authors']
+					fields['authors'] = entry['authors']
 
+				# Add abstract
 				if 'abstract' in entry:
-					article['abstract'] = entry['abstract']
+					fields['abstract'] = entry['abstract']
+
+					# Add key phrases
 					# Use comprehend to add key phrases objects
-					comprehend = boto3.client(service_name='comprehend', region_name='us-east-1')
+					#comprehend = boto3.client(service_name='comprehend', region_name='us-east-1')
 					# fullText is too long to be used in AWS Comprehend. Use abstract instead.
-					article["topics"] = comprehend.detect_key_phrases(Text=article["abstract"], LanguageCode='en')
+					#article["topics"] = comprehend.detect_key_phrases(Text=article["abstract"], LanguageCode='en')
 
+				# Add year of publishing
 				if 'year' in entry:
-					article['releaseDate'] = entry['year']
+					fields['release_date'] = entry['year']
 
+				# Add type of article
 				if 'type_of_reference' in entry:
-					article['articleType'] = entry['type_of_reference']
+					fields['article_type'] = entry['type_of_reference']
 
-				article['fullText'] = 'none'
-				article['fileURL'] = 'none'
+				#article['fullText'] = 'none'
+				#article['fileURL'] = 'none'
 
+				# Add keywords
 				if 'keywords' in entry:
-					article['keyWords'] = entry['keywords']
+					fields['keywords'] = entry['keywords']
 
-				article['lastUpdate'] = datetime.date.today()
+				# Add last time fetched by bot.
+				fields['last_update'] = datetime.date.today()
+
+				# Merge field to article. Requied structure of file for CloudSearch.
+				article['fields'] = fields
 
 				# This line push the item through the pipeline.
 				yield article
