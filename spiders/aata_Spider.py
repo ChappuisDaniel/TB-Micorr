@@ -35,48 +35,6 @@ class aata_Spider(CrawlSpider):
 	# Base URL use for bot's navigation
 	BASE_URL = 'http://aata.getty.edu'
 
-	def prase_fullText(self, response):
-		"""
-		Parse fullText article page and fetch data.
-		Each items are processed into the ITEM_PIPELINES before save.
-		"""
-		raise CloseSpider('Not Implemented yet.')
-
-		# Open article
-		article = Article()
-		for a in response.css('tr td'):
-
-			# Extract metadata.
-			article['fileURL'] = a.css('span::text').extract_first()
-			article['fullText'] = a.css('a::text').extract_first()
-			article['abstract'] = '1'
-			article['topics'] = '1'
-
-			# This line push the item through the pipeline.
-			yield article
-
-	def parse_browse(self, response):
-		"""
-		Parse the main pages and fetch fullText page.
-		Each article page is callback through parse_fulltext.
-		"""
-		raise CloseSpider('Not Implemented yet.')
-
-		data = {
-			'__VIEWSTATE': response.css('input#__VIEWSTATE::attr(value)').extract_first(),
-			'__EVENTTARGET': 'ctl00$MainContent$ctlNav$TreeViewTOC',
-			'__EVENTARGUMENT': "sAATA\\tocG\G_9\\G_9_1",
-			'__VIEWSTATEGENERATOR': response.css('input#__VIEWSTATEGENERATOR::attr(value)').extract_first(),
-			'__EVENTVALIDATION': response.css('input#__EVENTVALIDATION::attr(value)').extract_first()
-		}
-
-		yield scrapy.FormRequest(url=self.BASE_URL + '/Browse',
-									method='POST',
-									formdata=data,
-									dont_filter=True,
-									callback=self.prase_fullText
-								)
-
 	def parse(self, response):
 		"""
 		Simulate scraping AATA sources.
@@ -141,21 +99,3 @@ class aata_Spider(CrawlSpider):
 
 				# This line push the item through the pipeline.
 				yield article
-
-		"""
-		raise CloseSpider('Not Implemented yet.')
-		data = {
-			'__VIEWSTATE': response.css('input#__VIEWSTATE::attr(value)').extract_first(),
-			'__EVENTTARGET': 'ctl00$NavigationMenu',
-			'__EVENTARGUMENT': 'Browse',
-			'__VIEWSTATEGENERATOR': response.css('input#__VIEWSTATEGENERATOR::attr(value)').extract_first(),
-			'__EVENTVALIDATION': response.css('input#__EVENTVALIDATION::attr(value)').extract_first()
-		}
-
-		yield scrapy.FormRequest(url=self.BASE_URL + '/Browse',
-									method='POST',
-									formdata=data,
-									dont_filter=True,
-									callback=self.parse_browse
-								)
-		"""
