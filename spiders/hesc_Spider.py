@@ -9,7 +9,7 @@ import botocore.session
 import boto3
 
 # Import de la class Item Article.
-from micorr_crawlers.items.Article import Article, Fields
+from micorr_crawlers.items.Article import Article
 
 # BeautifulSoup for cleaning HTML
 from bs4 import BeautifulSoup
@@ -38,7 +38,7 @@ class hesc_Spider(CrawlSpider):
 
 		# Open article
 		article = Article()
-		fields = Fields()
+		#fields = Fields()
 		for a in response.css('main.c-content-layout__main'):
 
 			# Extract metadata.
@@ -47,27 +47,27 @@ class hesc_Spider(CrawlSpider):
 
 			# Add title
 			soup = BeautifulSoup(a.css('h1.ArticleTitle').extract_first(), 'html.parser')
-			fields['title'] = soup.get_text()
+			article['title'] = soup.get_text()
 
 			# Add authors
-			fields['authors'] = a.css('div.AuthorNames li span.AuthorName::text').extract()
+			article['authors'] = a.css('div.AuthorNames li span.AuthorName::text').extract()
 
 			# Add abstract
 			soup = BeautifulSoup(a.css('section.Abstract *.Para').extract_first(), 'html.parser')
-			fields['abstract'] = soup.get_text()
+			article['abstract'] = soup.get_text()
 
 			# Add date of publishing
-			fields['release_date'] = a.css('div.ArticleHistory p.HistoryOnlineDate::text').extract_first()
+			article['release_date'] = a.css('div.ArticleHistory p.HistoryOnlineDate::text').extract_first()
 
 			# Add type of article
-			fields['article_type'] = a.css('div.ArticleCategory::text').extract_first()
+			article['article_type'] = a.css('div.ArticleCategory::text').extract_first()
 
 			# Add fulltext.
 			soup = BeautifulSoup(a.css('main').extract_first(), 'html.parser')
-			fields['fulltext'] = soup.get_text()
+			#article['fulltext'] = soup.get_text()
 
 			# Add file url
-			fields['file_url'] = a.xpath('//a[@id="articlePdf"]/@href').extract_first()
+			article['file_url'] = a.xpath('//a[@id="articlePdf"]/@href').extract_first()
 
 
 			# Use comprehend to add key phrases objects
@@ -76,13 +76,13 @@ class hesc_Spider(CrawlSpider):
 			#fields["topics"] = comprehend.detect_key_phrases(Text=article["abstract"], LanguageCode='en')
 
 			# Add keywords
-			fields['keywords'] = a.css('section.KeywordGroup div *::text').extract()
+			article['keywords'] = a.css('section.KeywordGroup div *::text').extract()
 
 			# Add last time fetched by bot.
-			fields['last_update'] = datetime.date.today()
+			article['last_update'] = str(datetime.date.today())
 
 			# Merge field to article. Requied structure of file for CloudSearch.
-			article['fields'] = fields
+			#article['fields'] = fields
 
 			# This line push the item through the pipeline.
 			yield article

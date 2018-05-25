@@ -7,7 +7,7 @@ from scrapy.spiders import CrawlSpider
 from bs4 import BeautifulSoup
 
 # Import de la class Item Article.
-from micorr_crawlers.items.Article import Article, Fields
+from micorr_crawlers.items.Article import Article
 
 # AWS API services
 import botocore.session
