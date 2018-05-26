@@ -28,12 +28,12 @@ class DynamoDBStorePipeline(object):
         # Get the service resource.
         dynamodb = boto3.resource('dynamodb', region_name="us-east-1")
 
-        table = dynamodb.Table('scrapy_testMaj')
+        table = dynamodb.Table('allScraped')
 
         table.put_item(
             Item={
                 'id': str(item['id']),
-                'last_update': str(item['last_update']),
+                'last_update': int(item['last_update']),
                 'title': str(item['title']),
                 'authors': item['authors'],
                 'abstract': str(item['abstract']),
@@ -44,6 +44,7 @@ class DynamoDBStorePipeline(object):
                 'keywords': item['keywords']
                 #'topics': item['feilds']['topics'],
 
-            }
+            },
+        ConditionExpression='attribute_not_exists(id) AND attribute_not_exists(title)'
         )
         return item

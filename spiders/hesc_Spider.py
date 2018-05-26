@@ -1,5 +1,5 @@
-import os, io, datetime, re, json
-
+import os, io, re, json, time
+from datetime import datetime
 # Scrapy Libraries
 import scrapy
 from scrapy.spiders import CrawlSpider
@@ -29,6 +29,8 @@ class hesc_Spider(CrawlSpider):
 	session = botocore.session.get_session()
 	# Has to be in us-east where CloudSearch is avilable.
 	client = session.create_client('s3', region_name='us-east-1a')
+
+	now = datetime.now()
 
 	def prase_fullText(self, response):
 		"""
@@ -79,7 +81,7 @@ class hesc_Spider(CrawlSpider):
 			article['keywords'] = a.css('section.KeywordGroup div *::text').extract()
 
 			# Add last time fetched by bot.
-			article['last_update'] = str(datetime.date.today())
+			article['last_update'] = int(time.mktime(self.now.timetuple()))
 
 			# Merge field to article. Requied structure of file for CloudSearch.
 			#article['fields'] = fields
