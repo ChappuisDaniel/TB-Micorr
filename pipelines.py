@@ -45,6 +45,8 @@ class DynamoDBStorePipeline(object):
                 #'topics': item['feilds']['topics'],
 
             },
-        ConditionExpression='attribute_not_exists(id) AND attribute_not_exists(title)'
+            ConditionExpression='attribute_not_exists(id) AND attribute_not_exists(title)'
         )
+        sleep(0.2)
+        
         return item
