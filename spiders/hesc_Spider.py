@@ -1,16 +1,12 @@
+import os, io, re, json, time
+from datetime import datetime
+# Scrapy Libraries
 import scrapy
 from scrapy.spiders import CrawlSpider
-
-import datetime
-import json
+# BeautifulSoup for cleaning HTML
 from bs4 import BeautifulSoup
-
 # Import de la class Item Article.
 from micorr_crawlers.items.Article import Article
-
-# AWS API services
-import botocore.session
-import boto3
 
 class hesc_Spider(CrawlSpider):
 
@@ -18,16 +14,13 @@ class hesc_Spider(CrawlSpider):
 	# https://heritagesciencejournal.springeropen.com
 	name = "hesc"
 	allowed_domains = ['www.heritagesciencejournal.springeropen.com']
-
-	# Boto3 session for S3.
-	session = botocore.session.get_session()
-	# Has to be in us-east where CloudSearch is avilable.
-	client = session.create_client('s3', region_name='us-east-1a')
-
 	# Page with list of article links
 	start_urls = ['https://heritagesciencejournal.springeropen.com/articles']
 	# Base URL use for bot's navigation
 	BASE_URL = 'https://heritagesciencejournal.springeropen.com'
+
+	# Get the crawled time for last_update timestamp.
+	now = datetime.now()
 
 	def prase_fullText(self, response):
 		"""
@@ -37,34 +30,42 @@ class hesc_Spider(CrawlSpider):
 
 		# Open article
 		article = Article()
+		#fields = Fields()
 		for a in response.css('main.c-content-layout__main'):
 
 			# Extract metadata.
+			# Add ID
+			article['id'] = re.sub('https://doi.org/', '', a.css('p.ArticleDOI a::text').extract_first())
+
+			# Add title
 			soup = BeautifulSoup(a.css('h1.ArticleTitle').extract_first(), 'html.parser')
 			article['title'] = soup.get_text()
-			#article['title'] = a.css('h1.ArticleTitle').extract_first()
 
+			# Add authors
 			article['authors'] = a.css('div.AuthorNames li span.AuthorName::text').extract()
 
+			# Add abstract
 			soup = BeautifulSoup(a.css('section.Abstract *.Para').extract_first(), 'html.parser')
 			article['abstract'] = soup.get_text()
-			#article['abstract'] =  a.css('section.Abstract *.Para').extract_first()
 
-			article['releaseDate'] = a.css('div.ArticleHistory p.HistoryOnlineDate::text').extract_first()
-			article['articleType'] = a.css('div.ArticleCategory::text').extract_first()
+			# Add date of publishing
+			article['release_date'] = a.css('div.ArticleHistory p.HistoryOnlineDate::text').extract_first()
 
+			# Add type of article
+			article['article_type'] = a.css('div.ArticleCategory::text').extract_first()
+
+			# Add fulltext.
 			soup = BeautifulSoup(a.css('main').extract_first(), 'html.parser')
-			article['fullText'] = soup.get_text()
+			article['fulltext'] = soup.get_text()
 
-			article['fileURL'] = a.xpath('//a[@id="articlePdf"]/@href').extract_first()
-			article['lastUpdate'] = datetime.date.today()
+			# Add file url
+			article['file_url'] = a.xpath('//a[@id="articlePdf"]/@href').extract_first()
 
-			# Use comprehend to add key phrases objects
-			comprehend = boto3.client(service_name='comprehend', region_name='us-east-1')
-			# fullText is too long to be used in AWS Comprehend. Use abstract instead.
-			article["topics"] = comprehend.detect_key_phrases(Text=article["abstract"], LanguageCode='en')
+			# Add keywords
+			article['keywords'] = a.css('section.KeywordGroup div *::text').extract()
 
-			article['keyWords'] = a.css('span.Keyword::text').extract()
+			# Add last time fetched by bot.
+			article['last_update'] = int(time.mktime(self.now.timetuple()))
 
 			# This line push the item through the pipeline.
 			yield article
