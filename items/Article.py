@@ -4,8 +4,8 @@ class Article(scrapy.Item):
     id = scrapy.Field()
     type = scrapy.Field()
     fields = scrapy.Field()
-    
-class Fields(scrapy.Item):
+
+#class Fields(scrapy.Item):
     title = scrapy.Field()
     authors = scrapy.Field()
     abstract = scrapy.Field()
