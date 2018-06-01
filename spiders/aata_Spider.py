@@ -17,19 +17,30 @@ class aata_Spider(CrawlSpider):
 	name = "aata"
 	allowed_domains = ['aata.getty.edu']
 
+	# Get the crawled time for last_update timestamp.
+	now = datetime.now()
+
+	# Replace start_urls
 	def start_requests(self):
-		url = "http://aata.getty.edu/Home"
+		"""
+
+		"""
+		# Send a GET request on top page. Should get a cookie for upcomming uses.
+		#url = "http://aata.getty.edu/Home"
+		url = 'https://heritagesciencejournal.springeropen.com/articles'
 		yield Request(url, self.parse, method="GET")
 
-	def parse(self, response):
+	def parse_test(self, response):
 		"""
 		Simulate scraping AATA sources.
 		Parse the .ris file into formated data and push on S3.
 		"""
 		print("____ PARSE ____ " + str(response.headers.getlist('Set-Cookie')))
 
+		# URL for next call.
 		url = "http://aata.getty.edu/Browse"
 
+		# Header
 		header ={
 			"Connection" : "keep-alive",
 			"Cache-Control" : "max-age=0",
@@ -43,6 +54,7 @@ class aata_Spider(CrawlSpider):
 			"Accept-Language" : "fr-CH,fr-FR;q=0.9,fr;q=0.8,en-US;q=0.7,en;q=0.6"
 		}
 
+		# Body
 		body = {
 			"__eo_obj_states" : "ASEBGwpTcGxpdHRlcjEhAggHMDowfDE1MQUEMTowfA==",
 			"__eo_sc" : "",
@@ -57,6 +69,7 @@ class aata_Spider(CrawlSpider):
 			"eo_style_keys" : "/wFk"
 		}
 
+		# Send post request, should set seaarch for Results page.
 		yield Request(url, self.parse_result, method="POST", headers=header, body=json.dumps(body))
 
 
@@ -67,8 +80,10 @@ class aata_Spider(CrawlSpider):
 		"""
 		print("____ PARSE ____ " + str(response.headers.getlist('Set-Cookie')))
 
+		# URL for next call.
 		url = "http://aata.getty.edu/Results"
 
+		# Header
 		header ={
 			"Connection" : "keep-alive",
 			"Cache-Control" : "max-age=0",
@@ -82,6 +97,7 @@ class aata_Spider(CrawlSpider):
 			"Accept-Language" : "fr-CH,fr-FR;q=0.9,fr;q=0.8,en-US;q=0.7,en;q=0.6"
 		}
 
+		# Body
 		body = {
 	        "__eo_obj_states" : "ASEBGwpTcGxpdHRlcjEhAggHMDowfDE1MQUEMTowfA==",
 			"__eo_sc" : "",
@@ -102,14 +118,14 @@ class aata_Spider(CrawlSpider):
 			"ctl00$MainContent$ListView1$ctrl0$cb_" : "on"
 	    }
 
+		# Send post request, should provide the Results page with active serach.
 		yield Request(url, self.parse_file, method="POST", headers=header, body=json.dumps(body))
 
 
-	def parse_file(self, response):
-		print(response.body)
-
-		raise CloseSpider('Not Implemented yet.')
-
+	def parse(self, response):
+		"""
+		Parse .ris file and submit article to DynamoDB table.
+		"""
 		filepath = 'Abstracts.ris'
 
 		with open(filepath, 'r', encoding="utf-8") as bibliography_file:
@@ -119,52 +135,38 @@ class aata_Spider(CrawlSpider):
 
 				#Map enries into article.
 				article = Article()
-				fields = Fields()
-
 
 				if 'accession_number' in entry:
 					article['id'] = re.sub('[\s+]', '', entry['accession_number'])
 
 				# Add title
 				if 'translated_title' in entry:
-					fields['title'] = entry['translated_title']
+					article['title'] = entry['translated_title']
 				else:
-					fields['title'] = entry['title']
+					article['title'] = entry['title']
 
 				# Add authors
 				if 'authors' in entry:
-					fields['authors'] = entry['authors']
+					article['authors'] = entry['authors']
 
 				# Add abstract
 				if 'abstract' in entry:
-					fields['abstract'] = entry['abstract']
-
-					# Add key phrases
-					# Use comprehend to add key phrases objects
-					#comprehend = boto3.client(service_name='comprehend', region_name='us-east-1')
-					# fullText is too long to be used in AWS Comprehend. Use abstract instead.
-					#article["topics"] = comprehend.detect_key_phrases(Text=article["abstract"], LanguageCode='en')
+					article['abstract'] = entry['abstract']
 
 				# Add year of publishing
 				if 'year' in entry:
-					fields['release_date'] = entry['year']
+					article['release_date'] = entry['year']
 
 				# Add type of article
 				if 'type_of_reference' in entry:
-					fields['article_type'] = entry['type_of_reference']
-
-				#article['fullText'] = 'none'
-				#article['fileURL'] = 'none'
+					article['article_type'] = entry['type_of_reference']
 
 				# Add keywords
 				if 'keywords' in entry:
-					fields['keywords'] = entry['keywords']
+					article['keywords'] = entry['keywords']
 
 				# Add last time fetched by bot.
-				fields['last_update'] = datetime.date.today()
-
-				# Merge field to article. Requied structure of file for CloudSearch.
-				article['fields'] = fields
+				article['last_update'] = int(time.mktime(self.now.timetuple()))
 
 				# This line push the item through the pipeline.
 				yield article

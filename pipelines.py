@@ -18,6 +18,16 @@ class MicorrPipeline(object):
         # Test id attribut
         if 'id' in item:
             # If one is setted, item is passed through.
+
+            # Test each possible empty attribut and set them to Non (null)
+            # Otherwise DynamoDB refuses them.
+            if 'fulltext' not in item:
+                item['fulltext'] = None
+            if 'file_url' not in item:
+                item['file_url'] = None
+            if 'keywords' not in item:
+                item['keywords'] = None
+
             return item
         else:
             # Else it is droped.
@@ -31,17 +41,20 @@ class DynamoDBStorePipeline(object):
 
         table.put_item(
             Item={
+                # Those are technical attributes.
                 'id': str(item['id']),
                 'last_update': int(item['last_update']),
 
+                # Those are mandatory attributs.
                 'title': str(item['title']),
                 'authors': item['authors'],
                 'abstract': str(item['abstract']),
                 'release_date': str(item['release_date']),
                 'article_type': str(item['article_type']),
-                # If no fulltext exist store empty string.
-                'fulltext': str(item['fulltext']),
-                'file_url': str(item['file_url']),
+
+                # These fields may be empty.
+                'fulltext': item['fulltext'],
+                'file_url': item['file_url'],
                 'keywords': item['keywords']
 
             },

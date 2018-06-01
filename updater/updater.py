@@ -74,7 +74,9 @@ for i in response['Items']:
     doc['fields']['abstract'] = i['abstract']
     doc['fields']['release_date'] = i['release_date']
     doc['fields']['article_type'] = i['article_type']
-    doc['fields']['file_url'] = i['file_url']
+
+    if i['file_url'] != "":
+        doc['fields']['file_url'] = i['file_url']
 
     if i['keywords'] != "":
         doc['fields']['keywords'] = i['keywords']
