@@ -19,13 +19,12 @@ class DecimalEncoder(json.JSONEncoder):
         return super(DecimalEncoder, self).default(o)
 
 def timeout():
-        raise Exception("TableStatus timeout")
+        raise Exception("Waiting table 'allScraped' timeout.")
 
 # Set AWS DynamoDB parameters
 dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
 dynamodb_client = boto3.client('dynamodb', region_name='us-east-1')
 allScraped_table = dynamodb.Table('allScraped')
-updateDoc_table = dynamodb.Table('updateDoc')
 
 # Get the current time for the upcomming update.
 now = int(time.mktime(datetime.now().timetuple()))
@@ -37,39 +36,24 @@ lastUpdate_file.close()
 # Wait until table is active.
 call = 0
 while True:
-    response = dynamodb_client.describe_table(TableName='updateDoc')
+    response = dynamodb_client.describe_table(TableName='allScraped')
     if response['Table']['TableStatus'] == 'ACTIVE':
-        print("Table status 'updateDoc' : ACTIVE")
+        print("Table status 'allScraped' : " + response['Table']['TableStatus'])
         break
     else:
-        print("Table status 'updateDoc' : " + response['Table']['TableStatus'] + "\n Waiting...")
+        print("Table status 'allScraped' : " + response['Table']['TableStatus'] + "\n Waiting...")
         call += 1
         sleep(5) # Time in seconds.
         # Call timeout.
         if call > 6:
             timeout()
 
-print("Update new documents from 'allScraped' into 'updateDoc'.")
+print("Update new documents from 'allScraped'.")
 # Fetch new documents.
 response = allScraped_table.scan(
     IndexName = "last_update-id-index",
     FilterExpression = Key('last_update').between(lastUpdate, now),
     )
-"""
-print("Documents to update : " + str(len(response['Items'])))
-for i in response['Items']:
-    result = updateDoc_table.put_item(
-        Item = i,
-        ConditionExpression='attribute_not_exists(id) AND attribute_not_exists(title)'
-    )
-    sleep(0.2)
-"""
-
-# Update lastUpdate.txt
-lastUpdate_file = open("lastUpdate.txt", 'w', encoding="utf-8")
-lastUpdate_file.write(str(now))
-print("Update time set to : " + str(now))
-lastUpdate_file.close()
 
 
 # Update CloudSearch
@@ -83,19 +67,35 @@ for i in response['Items']:
     doc['id'] = i['id']
     doc['type'] = 'add'
     doc['fields'] = {}
+    #doc['fields']['topics'] = []
 
     doc['fields']['title'] = i['title']
     doc['fields']['authors'] = i['authors']
     doc['fields']['abstract'] = i['abstract']
-    #doc['fields']['fulltext'] = i['fulltext']
     doc['fields']['release_date'] = i['release_date']
     doc['fields']['article_type'] = i['article_type']
     doc['fields']['file_url'] = i['file_url']
-    doc['fields']['keywords'] = i['keywords']
-    #doc['fields']['topics'] = i['topics']
+
+    if i['keywords'] != "":
+        doc['fields']['keywords'] = i['keywords']
+
+    # Create fullext field only if there is one. Avoid empty field.
+    if i['fulltext'] != "":
+        doc['fields']['fulltext'] = i['fulltext']
+        """
+        # Can't use comprehend on fulltext. Too big.
+        # Use comprehend to add key phrases objects
+        comprehend = boto3.client(service_name='comprehend', region_name='us-east-1')
+        # We try to summarise the fulltext with key phrases given by AWS CloudSearch.
+        comprehendTopics = comprehend.detect_key_phrases(Text=i["fulltext"], LanguageCode='en')
+        for topicTexts in comprehendTopics['KeyPhrases']:
+            doc['fields']['topics'].append(topicTexts['Text'])
+        """
+
     doc['fields']['last_update'] = int(i['last_update'])
 
     batch.append(doc)
+    sleep(0.1) # Wait for API throughput, or no reason.
 
 # Create file
 updateCloudSearch_file = open("updateCloudSearch.json", 'w', encoding="utf-8")
@@ -104,8 +104,12 @@ print("Update file complete.")
 updateCloudSearch_file.close()
 
 # Call upload
-docEd = 'https://endpoint.cloudsearch.amazonaws.com'
+docEd = 'http://doc-micorr-test-yzjuar4kajhkoii2hgziiq5vxy.us-east-1.cloudsearch.amazonaws.com'
 updateFile = 'updateCloudSearch.json'
 run(["aws", "cloudsearchdomain", "--endpoint-url", docEd, "upload-documents", "--content-type", "application/json", "--documents", updateFile])
 
-# Empty updateDoc
+# Update lastUpdate.txt
+lastUpdate_file = open("lastUpdate.txt", 'w', encoding="utf-8")
+lastUpdate_file.write(str(now))
+print("Update time set to : " + str(now))
+lastUpdate_file.close()
