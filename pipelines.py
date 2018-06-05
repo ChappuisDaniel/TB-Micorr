@@ -61,6 +61,6 @@ class DynamoDBStorePipeline(object):
             # Assert an article with same ID AND TITLE is not stored twice.
             ConditionExpression='attribute_not_exists(id) AND attribute_not_exists(title)'
         )
-        sleep(2) # Wait for table write capacity
+        sleep(0.5) # Wait for table write capacity
 
         return item
