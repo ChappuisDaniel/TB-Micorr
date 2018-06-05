@@ -50,17 +50,36 @@ while True:
 
 print("Update new documents from 'allScraped'.")
 # Fetch new documents.
+result_items = []
+
 response = allScraped_table.scan(
     IndexName = "last_update-id-index",
-    FilterExpression = Key('last_update').between(lastUpdate, now),
+    FilterExpression = Key('last_update').between(lastUpdate, now)
     )
 
+result_items.extend(response['Items'])
 
+# Use this bloc for querying
+while 'LastEvaluatedKey' in response:
+    response = allScraped_table.scan(
+        IndexName = "last_update-id-index",
+        FilterExpression = Key('last_update').between(lastUpdate, now),
+        ExclusiveStartKey = response['LastEvaluatedKey']
+    )
+
+    result_items.extend(response['Items'])
+
+
+print("New items found : " + str(len(result_items)))
 # Update CloudSearch
 print("Create JSON file.")
+
+docCount = 0
+itemsCount = 0
+
 # JOSNify
 batch = []
-for i in response['Items']:
+for i in result_items:
     # Build doc
     doc = {}
 
@@ -74,15 +93,17 @@ for i in response['Items']:
     doc['fields']['abstract'] = i['abstract']
     doc['fields']['release_date'] = i['release_date']
     doc['fields']['article_type'] = i['article_type']
-    doc['fields']['file_url'] = i['file_url']
 
-    if i['keywords'] != "":
+    if i['file_url'] != None:
+        doc['fields']['file_url'] = i['file_url']
+
+    if i['keywords'] != None:
         doc['fields']['keywords'] = i['keywords']
 
     # Create fullext field only if there is one. Avoid empty field.
-    if i['fulltext'] != "":
+    if i['fulltext'] != None:
         doc['fields']['fulltext'] = i['fulltext']
-        """
+
         # Can't use comprehend on fulltext. Too big.
         # Use comprehend to add key phrases objects
         comprehend = boto3.client(service_name='comprehend', region_name='us-east-1')
@@ -90,24 +111,36 @@ for i in response['Items']:
         comprehendTopics = comprehend.detect_key_phrases(Text=i["fulltext"], LanguageCode='en')
         for topicTexts in comprehendTopics['KeyPhrases']:
             doc['fields']['topics'].append(topicTexts['Text'])
-        """
 
     doc['fields']['last_update'] = int(i['last_update'])
 
     batch.append(doc)
-    sleep(0.1) # Wait for API throughput, or no reason.
+    itemsCount += 1
+    sleep(0.001) # Wait a bit.
 
-# Create file
-updateCloudSearch_file = open("updateCloudSearch.json", 'w', encoding="utf-8")
-updateCloudSearch_file.write(json.dumps(batch))
-print("Update file complete.")
-updateCloudSearch_file.close()
+    if itemsCount > 4000 or i == result_items[len(result_items)-1]:
+        # Create file
+        updateCloudSearch_file = open("updateDoc_" + str(docCount) + ".json", 'w', encoding="utf-8")
+        updateCloudSearch_file.write(json.dumps(batch))
+        print("Update file n°" + str(docCount) + " complete with " + str(itemsCount) + " documents.")
+        updateCloudSearch_file.close()
 
-# Call upload
-docEd = 'http://doc-micorr-test-yzjuar4kajhkoii2hgziiq5vxy.us-east-1.cloudsearch.amazonaws.com'
-updateFile = 'updateCloudSearch.json'
-run(["aws", "cloudsearchdomain", "--endpoint-url", docEd, "upload-documents", "--content-type", "application/json", "--documents", updateFile])
+        docCount += 1
+        itemsCount = 0
+        batch = []
 
+if len(result_items) > 0:
+    print("Start indexing.")
+    for doc in range(docCount):
+        print("Upload file n°" + str(doc) + " with " + str(itemsCount) + " documents.")
+        # Call upload
+        docEd = 'http://doc-micorr-test-yzjuar4kajhkoii2hgziiq5vxy.us-east-1.cloudsearch.amazonaws.com'
+        updateFile = "updateDoc_" + str(doc) + ".json"
+        run(["aws", "cloudsearchdomain", "--endpoint-url", docEd, "upload-documents", "--content-type", "application/json", "--documents", updateFile])
+else:
+    print("Nothing to index.")
+
+###____________________
 # Update lastUpdate.txt
 lastUpdate_file = open("lastUpdate.txt", 'w', encoding="utf-8")
 lastUpdate_file.write(str(now))

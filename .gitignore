@@ -102,3 +102,6 @@ ENV/
 .mypy_cache/
 updater/lastUpdate.txt
 updater/updateCloudSearch.json
+updater/updateDoc_*.json
+updater/updateCloudSearch.json
+updater/updateCloudSearch.json
