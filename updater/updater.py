@@ -1,11 +1,15 @@
 from __future__ import print_function # Python 2/3 compatibility
+
 import boto3
-import json
-import decimal
-import time
+from boto3.dynamodb.conditions import Key, Attr
+
+import json, csv
+from bson import json_util
+
+import decimal, time
 from time import sleep
 from datetime import datetime
-from boto3.dynamodb.conditions import Key, Attr
+
 from subprocess import check_output, call, run
 
 # Helper class to convert a DynamoDB item to JSON.
@@ -28,6 +32,7 @@ allScraped_table = dynamodb.Table('allScraped')
 
 # Get the current time for the upcomming update.
 now = int(time.mktime(datetime.now().timetuple()))
+
 # Fetch last update time. Use for query.
 lastUpdate_file = open("lastUpdate.txt", 'r', encoding="utf-8")
 lastUpdate = int(lastUpdate_file.read())
@@ -86,7 +91,6 @@ for i in result_items:
     doc['id'] = i['id']
     doc['type'] = 'add'
     doc['fields'] = {}
-    #doc['fields']['topics'] = []
 
     doc['fields']['title'] = i['title']
     doc['fields']['authors'] = i['authors']
@@ -103,14 +107,6 @@ for i in result_items:
     # Create fullext field only if there is one. Avoid empty field.
     if i['fulltext'] != None:
         doc['fields']['fulltext'] = i['fulltext']
-
-        # Can't use comprehend on fulltext. Too big.
-        # Use comprehend to add key phrases objects
-        comprehend = boto3.client(service_name='comprehend', region_name='us-east-1')
-        # We try to summarise the fulltext with key phrases given by AWS CloudSearch.
-        comprehendTopics = comprehend.detect_key_phrases(Text=i["fulltext"], LanguageCode='en')
-        for topicTexts in comprehendTopics['KeyPhrases']:
-            doc['fields']['topics'].append(topicTexts['Text'])
 
     doc['fields']['last_update'] = int(i['last_update'])
 

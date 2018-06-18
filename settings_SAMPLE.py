@@ -14,8 +14,9 @@ BOT_NAME = 'micorr_crawlers'
 SPIDER_MODULES = ['micorr_crawlers.spiders']
 NEWSPIDER_MODULE = 'micorr_crawlers.spiders'
 
-# Export as [spriderName].json file on AWS S3 'micorr_crawlers' bucket
+# Export as [spriderName].json file on AWS S3 'micorr-crawled-data' bucket
 FEED_FORMAT = "json"
+FEED_EXPORT_ENCODING = 'utf-8'
 FEED_URI = "ADD YOUR URI"
 
 # AWS API presentation_nigel_blades
@@ -23,7 +24,7 @@ AWS_ACCESS_KEY_ID = 'ADD YOUR KEY ID'
 AWS_SECRET_ACCESS_KEY= 'ADD YOUR PRIVATE KEY'
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-USER_AGENT = 'ADD YOUR USER AGENT: name(email)'
+USER_AGENT = 'ADD YOUR USER-AGENT'
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = True
@@ -41,6 +42,8 @@ CONCURRENT_REQUESTS_PER_IP = 0
 
 # Enable cookies
 COOKIES_ENABLED = True
+COOKIES_DEBUG = True
+REDIRECT_MAX_TIMES = 3
 
 # Disable Telnet Console. Default ports: [6023, 6073]
 TELNETCONSOLE_ENABLED = False
@@ -55,6 +58,7 @@ DEFAULT_REQUEST_HEADERS = {
 # See https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 SPIDER_MIDDLEWARES = {
     'micorr_crawlers.middlewares.MicorrSpiderMiddleware': 543,
+    'scrapy.contrib.spidermiddleware.referer.RefererMiddleware': True,
 }
 
 # Enable or disable downloader middlewares
@@ -72,7 +76,7 @@ EXTENSIONS = {
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-   'micorr_crawlers.pipelines.MicorrPipeline': 543,
+   'micorr_crawlers.pipelines.DynamoDBStorePipeline':543
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
@@ -91,7 +95,7 @@ AUTOTHROTTLE_DEBUG = False
 # Enable and configure HTTP caching (disabled by default)
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html#httpcache-middleware-settings
 HTTPCACHE_ENABLED = True
-HTTPCACHE_EXPIRATION_SECS = 1728000 # 20 jours
+HTTPCACHE_EXPIRATION_SECS = 0 # Unlimited
 HTTPCACHE_DIR = 'httpcache'
 HTTPCACHE_IGNORE_HTTP_CODES = []
 HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'

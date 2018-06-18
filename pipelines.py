@@ -9,14 +9,10 @@ from scrapy.exceptions import DropItem
 import boto3
 from time import sleep
 
-class MicorrPipeline(object):
+class DynamoDBStorePipeline(object):
     def process_item(self, item, spider):
-        """
-        Test if the current item has a setted fullText attribut.
-        """
 
-        # Test id attribut
-        if 'id' in item:
+        if 'id' in item and 'title' in item:
             # If one is setted, item is passed through.
 
             # Test each possible empty attribut and set them to Non (null)
@@ -28,39 +24,37 @@ class MicorrPipeline(object):
             if 'keywords' not in item:
                 item['keywords'] = None
 
+            # Get the service resource.
+            dynamodb = boto3.resource('dynamodb', region_name="us-east-1")
+            table = dynamodb.Table('allScraped')
+
+            response = table.put_item(
+                Item={
+                    # Those are technical attributes.
+                    'id': str(item['id']),
+                    'last_update': int(item['last_update']),
+
+                    # Those are mandatory attributs.
+                    'title': str(item['title']),
+                    'authors': item['authors'],
+                    'abstract': str(item['abstract']),
+                    'release_date': str(item['release_date']),
+                    'article_type': str(item['article_type']),
+
+                    # These fields may be empty.
+                    'fulltext': item['fulltext'],
+                    'file_url': item['file_url'],
+                    'keywords': item['keywords']
+
+                },
+                # Assert an article with same ID AND TITLE is not stored twice.
+                ConditionExpression='attribute_not_exists(id) AND attribute_not_exists(title)'
+            )
+
+            sleep(0.5) # Wait for table write capacity
+
             return item
+
         else:
             # Else it is droped.
-            raise DropItem("Item integrity compromised.")
-
-class DynamoDBStorePipeline(object):
-    def process_item(self, item, spider):
-        # Get the service resource.
-        dynamodb = boto3.resource('dynamodb', region_name="us-east-1")
-        table = dynamodb.Table('allScraped')
-
-        table.put_item(
-            Item={
-                # Those are technical attributes.
-                'id': str(item['id']),
-                'last_update': int(item['last_update']),
-
-                # Those are mandatory attributs.
-                'title': str(item['title']),
-                'authors': item['authors'],
-                'abstract': str(item['abstract']),
-                'release_date': str(item['release_date']),
-                'article_type': str(item['article_type']),
-
-                # These fields may be empty.
-                'fulltext': item['fulltext'],
-                'file_url': item['file_url'],
-                'keywords': item['keywords']
-
-            },
-            # Assert an article with same ID AND TITLE is not stored twice.
-            ConditionExpression='attribute_not_exists(id) AND attribute_not_exists(title)'
-        )
-        sleep(0.5) # Wait for table write capacity
-
-        return item
+            raise DropItem("Item usability compromised.")

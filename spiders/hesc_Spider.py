@@ -35,7 +35,7 @@ class hesc_Spider(CrawlSpider):
 
 			# Extract metadata.
 			# Add ID
-			article['id'] = re.sub('https://doi.org/', '', a.css('p.ArticleDOI a::text').extract_first())
+			article['id'] = re.sub('https://doi.org/10.1186/', '', a.css('p.ArticleDOI a::text').extract_first())
 
 			# Add title
 			soup = BeautifulSoup(a.css('h1.ArticleTitle').extract_first(), 'html.parser')
