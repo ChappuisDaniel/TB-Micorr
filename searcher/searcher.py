@@ -41,6 +41,14 @@ def parseTopicTerm():
                 "term" : str,
                 "weight" : float
             })
+    """
+    distinctTerm = df.term.unique()
+    query_file = open("distinctTerm.txt", 'w', encoding="utf-8")
+    query_file.write("Distinct term : \n")
+    for t in distinctTerm:
+        query_file.write(t + "\n")
+    query_file.close()
+    """
     return df
 
 
@@ -56,6 +64,8 @@ def createQuery(request):
     facetteSize = 5
     topicBoost = 2
 
+    topicFilter = 0.02
+
     # Select topics on matching term
     topics = []
     nearTerms = []
@@ -69,17 +79,24 @@ def createQuery(request):
     queryTopics = []
     for topic in topics:
         if not topic.empty:
-            print("Topic : \n" + topic.head(5).to_string())
+            #print("Topic : \n" + topic.to_string())
 
-            # Select higher
-            bestTopic = topic.loc[[topic['weight'].idxmax()]]
-            #print("Topic : " + bestTopic.head(5).to_string())
+            # Select a list of higher topics
+            higherTopics = topic.loc[topic.weight > topicFilter]
+            #print("Filtred topic : \n" + higherTopics.to_string())
 
-            # Jsonify
-            best_topic = bestTopic.to_dict('records')[0]
-            print("Best topic : \n" + json.dumps(best_topic, indent=4))
+            if higherTopics.empty:
+                # Get the best topic
+                bestTopic = topic.loc[[topic['weight'].idxmax()]]
+                # Jsonify
+                best_topic = bestTopic.to_dict('records')[0]
+                #print("Best topic : \n" + json.dumps(best_topic, indent=4))
+                queryTopics.append("(term+field%3Dtopics+boost%3D" + str(topicBoost) + "+'" + best_topic['topic'] + "')")
 
-            queryTopics.append("(term+field%3Dtopics+boost%3D" + str(topicBoost) + "+'" + best_topic['topic'] + "')")
+            for filtredTopic in higherTopics.to_dict('records') :
+                queryTopics.append("(term+field%3Dtopics+boost%3D" + str(topicBoost) + "+'" + filtredTopic['topic'] + "')")
+
+            #topicsAnalysis_file.write("'"+request+"'\nTopic : \n" + topic.to_string() + "\nBest topic : \n" + json.dumps(best_topic, indent=4)+"\n\n")
 
     str_nearTerms = ""
     for i in nearTerms:
@@ -95,6 +112,8 @@ def createQuery(request):
 
 
 query_file = open("query.txt", 'w', encoding="utf-8")
+#topicsAnalysis_file = open("topicsAnalysis.txt", 'w', encoding="utf-8")
 for request in userSearchTerm:
     createQuery(request=request)
 query_file.close()
+#topicsAnalysis_file.close()
