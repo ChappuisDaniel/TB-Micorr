@@ -114,7 +114,7 @@ def createQuery(request):
     for i in queryTopics:
         str_queryTopics += i
     # Build query
-    query = "/2013-01-01/search?q=(or+" + str_queryTopics + str_nearTerms + ")&q.parser=structured&facet.topics={sort:\"bucket\", size:" + str(facetteSize) + "}"
+    query = "/2013-01-01/search?q=(or+" + str_queryTopics + str_nearTerms + "&q.parser=structured&return=title,abstract,article_type,release_date&facet.topics={sort:\"bucket\", size:"+str(facetteSize)+"}
 
     query_file.write(query + "\n")
 
