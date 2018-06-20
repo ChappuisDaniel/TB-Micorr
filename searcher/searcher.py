@@ -9,6 +9,8 @@ from pandas.io.json import json_normalize
 from itertools import groupby
 from collections import OrderedDict
 
+from stemming.porter2 import stem
+
 userSearchTerm = [
     'corrosion active',
     'localised corrosion',
@@ -56,7 +58,6 @@ def createQuery(request):
     """
     Search and add topic to the query based upon the terms given.
     """
-
     # Initialize topic-term-weight
     ttw = parseTopicTerm()
 
@@ -70,7 +71,14 @@ def createQuery(request):
     topics = []
     nearTerms = []
     for term in request.split():
+        # Search for raw term
         topics.append(ttw.loc[ttw['term'] == term])
+        # Search for stemmed term
+        stemmedTerm = stem(term)
+        topics.append(ttw.loc[ttw['term'] == stemmedTerm])
+
+        # Seems to wide
+        #topics.append(ttw.loc[ttw['term'].str.contains(stemmedTerm)])
 
         nearTerms.append("(near+distance%3D" + str(nearDistance) + "+'" + term + "')")
 
