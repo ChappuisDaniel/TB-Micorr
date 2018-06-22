@@ -3,6 +3,7 @@ from __future__ import print_function # Python 2/3 compatibility
 import boto3
 import json, csv
 from subprocess import check_output, call, run
+import requests
 
 import pandas
 from pandas.io.json import json_normalize
@@ -33,7 +34,7 @@ userSearchTerm = [
     'surface enrichment',
     'non corroded metal'
 ]
-
+queriesList = []
 def parseTopicTerm():
     """
     Parse CSV tu create a searchable table.
@@ -62,8 +63,8 @@ def createQuery(request):
     ttw = parseTopicTerm()
 
     nearDistance = 3
-    facetteSize = 5
-    topicBoost = 2
+    termBoost = 2
+    topicBoost = 1.5
 
     topicFilter = 0.02
 
@@ -80,7 +81,7 @@ def createQuery(request):
         # Seems to wide
         #topics.append(ttw.loc[ttw['term'].str.contains(stemmedTerm)])
 
-        nearTerms.append("(near+distance%3D" + str(nearDistance) + "+'" + term + "')")
+        nearTerms.append("(near+distance%3D" + str(nearDistance) + "+boost%3D" + str(termBoost) + "+'" + term + "')")
 
 
     # Get the higher topic
@@ -114,11 +115,43 @@ def createQuery(request):
     for i in queryTopics:
         str_queryTopics += i
     # Build query
-    query = "/2013-01-01/search?q=(or+" + str_queryTopics + str_nearTerms + "&q.parser=structured&return=title,abstract,article_type,release_date&facet.topics={sort:\"bucket\", size:"+str(facetteSize)+"}
+    query = "/2013-01-01/search?q=(or+" + str_queryTopics + "(and" + str_nearTerms + "))&q.parser=structured&return=title,abstract,article_type,topics&size=30"
+
+    testQuery(query=query, request=request)
 
     query_file.write(query + "\n")
+    queriesList.append(query)
 
 
+def testQuery(query, request):
+    r = requests.get('http://search-micorr-test-yzjuar4kajhkoii2hgziiq5vxy.us-east-1.cloudsearch.amazonaws.com' + query)
+
+    print('\n Status : '+ str(r.status_code))
+    #print('\n Json : '+ json.dumps(r.json()))
+
+    searchResults = r.json()['hits']['hit']
+
+    for i in searchResults:
+        i['fields']['id'] = i['id']
+
+    # open a file for writing
+    response = open("results/"+ request +".csv", 'w', encoding="utf-8")
+
+    # create the csv writer object
+    csvwriter = csv.writer(response)
+
+    count = 0
+    for hit in searchResults:
+        if count == 0:
+            header = hit['fields'].keys()
+            csvwriter.writerow(header)
+            count = 1
+
+        csvwriter.writerow(hit['fields'].values())
+
+    response.close()
+
+###________Main_________________________________________________________________
 query_file = open("query.txt", 'w', encoding="utf-8")
 #topicsAnalysis_file = open("topicsAnalysis.txt", 'w', encoding="utf-8")
 for request in userSearchTerm:
