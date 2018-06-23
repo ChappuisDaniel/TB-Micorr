@@ -46,7 +46,7 @@ now = int(time.mktime(datetime.now().timetuple()))
 lastUpdate_file = open("lastUpdate_topic.txt", 'r', encoding="utf-8")
 lastUpdate = int(lastUpdate_file.read())
 lastUpdate_file.close()
-"""
+
 # Wait until table is active.
 call = 0
 while True:
@@ -275,7 +275,6 @@ for r in result_items:
         docCount += 1
         itemsCount = 0
         batch = []
-"""
 
 # Update index
 if True:
