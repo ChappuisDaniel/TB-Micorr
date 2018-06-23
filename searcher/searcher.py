@@ -80,9 +80,7 @@ def createQuery(request):
 
         # Seems to wide
         #topics.append(ttw.loc[ttw['term'].str.contains(stemmedTerm)])
-
         nearTerms.append("(near+distance%3D" + str(nearDistance) + "+boost%3D" + str(termBoost) + "+'" + term + "')")
-
 
     # Get the higher topic
     queryTopics = []
