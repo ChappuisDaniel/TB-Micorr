@@ -133,7 +133,7 @@ def testQuery(query, request):
         i['fields']['id'] = i['id']
 
     # open a file for writing
-    response = open("results/"+ request +".csv", 'w', encoding="utf-8")
+    response = open("results/csv/"+ request +".csv", 'w', encoding="utf-8")
 
     # create the csv writer object
     csvwriter = csv.writer(response)
