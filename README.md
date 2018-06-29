@@ -12,6 +12,8 @@ Once it is installed, run the Anaconda Prompt and the followings commands to ins
 
 > conda install -c anaconda boto3 
 
+Plese note that boto needs AWS user keys to allow the scripts to work wit AWS APIs. Refere to AWS documentation to learn how to assign premissions to a user and get the key pair.
+
 We need to install BeatifulSoup Library. It is use to clean fetched data of all HTML tags and clean the text we'll submit to AWS Comprehend.
 
 > pip install beautifulsoup4
