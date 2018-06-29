@@ -42,14 +42,7 @@ def parseTopicTerm():
                 "term" : str,
                 "weight" : float
             })
-    """
-    distinctTerm = df.term.unique()
-    query_file = open("distinctTerm.txt", 'w', encoding="utf-8")
-    query_file.write("Distinct term : \n")
-    for t in distinctTerm:
-        query_file.write(t + "\n")
-    query_file.close()
-    """
+
     return df
 
 

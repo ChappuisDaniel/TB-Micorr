@@ -1,0 +1,245 @@
+'corrosion active'
+Topic : 
+    topic       term    weight
+2     000  corrosion  0.019386
+23    002  corrosion  0.014693
+72    007  corrosion  0.024956
+91    009  corrosion  0.049135
+227   022  corrosion  0.011464
+252   025  corrosion  0.046530
+578   057  corrosion  0.004080
+698   069  corrosion  0.018444
+Best topic : 
+{
+    "topic": "009",
+    "term": "corrosion",
+    "weight": 0.049134582
+}
+
+'localised corrosion'
+Topic : 
+    topic       term    weight
+2     000  corrosion  0.019386
+23    002  corrosion  0.014693
+72    007  corrosion  0.024956
+91    009  corrosion  0.049135
+227   022  corrosion  0.011464
+252   025  corrosion  0.046530
+578   057  corrosion  0.004080
+698   069  corrosion  0.018444
+Best topic : 
+{
+    "topic": "009",
+    "term": "corrosion",
+    "weight": 0.049134582
+}
+
+'original surface'
+Topic : 
+    topic      term    weight
+142   014  original  0.004913
+478   047  original  0.015557
+633   063  original  0.010674
+857   087  original  0.019623
+Best topic : 
+{
+    "topic": "087",
+    "term": "original",
+    "weight": 0.01962311
+}
+
+'original surface'
+Topic : 
+    topic     term    weight
+14    001  surface  0.011444
+24    002  surface  0.013387
+83    008  surface  0.015506
+174   017  surface  0.020073
+413   041  surface  0.006294
+693   069  surface  0.031033
+Best topic : 
+{
+    "topic": "069",
+    "term": "surface",
+    "weight": 0.031032614
+}
+
+'limit of the original surface'
+Topic : 
+    topic      term    weight
+142   014  original  0.004913
+478   047  original  0.015557
+633   063  original  0.010674
+857   087  original  0.019623
+Best topic : 
+{
+    "topic": "087",
+    "term": "original",
+    "weight": 0.01962311
+}
+
+'limit of the original surface'
+Topic : 
+    topic     term    weight
+14    001  surface  0.011444
+24    002  surface  0.013387
+83    008  surface  0.015506
+174   017  surface  0.020073
+413   041  surface  0.006294
+693   069  surface  0.031033
+Best topic : 
+{
+    "topic": "069",
+    "term": "surface",
+    "weight": 0.031032614
+}
+
+'markers of the original surface'
+Topic : 
+    topic      term    weight
+142   014  original  0.004913
+478   047  original  0.015557
+633   063  original  0.010674
+857   087  original  0.019623
+Best topic : 
+{
+    "topic": "087",
+    "term": "original",
+    "weight": 0.01962311
+}
+
+'markers of the original surface'
+Topic : 
+    topic     term    weight
+14    001  surface  0.011444
+24    002  surface  0.013387
+83    008  surface  0.015506
+174   017  surface  0.020073
+413   041  surface  0.006294
+693   069  surface  0.031033
+Best topic : 
+{
+    "topic": "069",
+    "term": "surface",
+    "weight": 0.031032614
+}
+
+'mineralised metal'
+Topic : 
+    topic   term    weight
+267   026  metal  0.016006
+315   031  metal  0.025848
+330   033  metal  0.070544
+690   069  metal  0.091687
+890   095  metal  0.162876
+Best topic : 
+{
+    "topic": "095",
+    "term": "metal",
+    "weight": 0.16287568
+}
+
+'filiform corrosion'
+Topic : 
+    topic       term    weight
+2     000  corrosion  0.019386
+23    002  corrosion  0.014693
+72    007  corrosion  0.024956
+91    009  corrosion  0.049135
+227   022  corrosion  0.011464
+252   025  corrosion  0.046530
+578   057  corrosion  0.004080
+698   069  corrosion  0.018444
+Best topic : 
+{
+    "topic": "009",
+    "term": "corrosion",
+    "weight": 0.049134582
+}
+
+'zinc pest'
+Topic : 
+    topic  term    weight
+110   011  zinc  0.056474
+196   019  zinc  0.012740
+Best topic : 
+{
+    "topic": "011",
+    "term": "zinc",
+    "weight": 0.056474388
+}
+
+'surface hardening'
+Topic : 
+    topic     term    weight
+14    001  surface  0.011444
+24    002  surface  0.013387
+83    008  surface  0.015506
+174   017  surface  0.020073
+413   041  surface  0.006294
+693   069  surface  0.031033
+Best topic : 
+{
+    "topic": "069",
+    "term": "surface",
+    "weight": 0.031032614
+}
+
+'metal etching'
+Topic : 
+    topic   term    weight
+267   026  metal  0.016006
+315   031  metal  0.025848
+330   033  metal  0.070544
+690   069  metal  0.091687
+890   095  metal  0.162876
+Best topic : 
+{
+    "topic": "095",
+    "term": "metal",
+    "weight": 0.16287568
+}
+
+'paint layers'
+Topic : 
+    topic   term    weight
+254   025  paint  0.030046
+697   069  paint  0.018512
+Best topic : 
+{
+    "topic": "025",
+    "term": "paint",
+    "weight": 0.030046352999999998
+}
+
+'surface enrichment'
+Topic : 
+    topic     term    weight
+14    001  surface  0.011444
+24    002  surface  0.013387
+83    008  surface  0.015506
+174   017  surface  0.020073
+413   041  surface  0.006294
+693   069  surface  0.031033
+Best topic : 
+{
+    "topic": "069",
+    "term": "surface",
+    "weight": 0.031032614
+}
+
+'non corroded metal'
+Topic : 
+    topic   term    weight
+267   026  metal  0.016006
+315   031  metal  0.025848
+330   033  metal  0.070544
+690   069  metal  0.091687
+890   095  metal  0.162876
+Best topic : 
+{
+    "topic": "095",
+    "term": "metal",
+    "weight": 0.16287568
+}
+
