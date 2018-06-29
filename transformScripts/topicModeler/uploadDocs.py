@@ -28,6 +28,11 @@ def timeout():
     raise Exception("Waiting table 'allScraped' timeout.")
 
 def extractTopics():
+    """
+    Extract both file from Comprehend output file.
+    output.tar.gz has to be in the same file.
+    """
+
     # Get archive from S3
     output_file = "output.tar.gz"
 
@@ -38,6 +43,11 @@ def extractTopics():
     print("Topics extracted in current directory.")
 
 def uploadDocuments():
+    """
+    Perform a merge between DynamoDB documents and topics form Comprehend.
+    Then upload documents on Cloudsearch. Both add new documents and update.
+    """
+
     # Parse CSV
     df = pd.read_csv('doc-topics.csv', dtype={
                 "docname" : str,
@@ -47,6 +57,7 @@ def uploadDocuments():
 
     df = (df[df.proportion > 0.1])
 
+    # Format document and topics table for easyer merging.
     results = []
     for (docname), bag in df.groupby(["docname"]):
         contents_df = bag.drop(["docname", 'proportion'], axis=1)
@@ -63,7 +74,7 @@ def uploadDocuments():
         del result['topics']
         #print(json.dumps(result, indent=4))
 
-
+    # Create topic file.
     topics_file = open("topicFile.json", 'w', encoding="utf-8")
     topics_file.write(json.dumps(results))
     topics_file.close()
@@ -73,19 +84,18 @@ def uploadDocuments():
     result_items = []
     response = allScraped_table.scan(
         IndexName = "last_update-id-index",
-        )
-
+    )
     result_items.extend(response['Items'])
 
-    # Use this bloc for querying
+    # Perform scan through all the table.
     while 'LastEvaluatedKey' in response:
         response = allScraped_table.scan(
             IndexName = "last_update-id-index",
             ExclusiveStartKey = response['LastEvaluatedKey']
         )
-
         result_items.extend(response['Items'])
 
+    # Format DynamoDB articles.
     batch = []
     for i in result_items:
         # Build doc
@@ -101,6 +111,7 @@ def uploadDocuments():
         doc['fields']['release_date'] = i['release_date']
         doc['fields']['article_type'] = i['article_type']
 
+        # Prevent optional data to add unwanted object.
         if i['file_url'] != None:
             doc['fields']['file_url'] = i['file_url']
 
@@ -114,13 +125,16 @@ def uploadDocuments():
 
         batch.append(doc)
 
+    # Create document file.
     docs_file = open("docFile.json", 'w', encoding="utf-8")
     docs_file.write(json.dumps(batch))
     docs_file.close()
     print('Documents file created.')
 
+
     print('Start merging both files.')
-    # Open index data
+
+    # Open documents
     with open('docFile.json') as f:
         data = json.load(f)
     # Flatten data
@@ -130,7 +144,7 @@ def uploadDocuments():
     # Open topics
     with open('topicFile.json') as f:
         data = json.load(f)
-    # Flatten data
+    # Flatten topics
     topic_df = json_normalize(data)
     #print("topic_df :\n" + topic_df.head(3).to_string())
 
@@ -140,11 +154,12 @@ def uploadDocuments():
 
     print('Merging done. Start jsonify.')
 
-    # Reforme json
+    # Reforme json for CloudSearch API.
     docCount = 0
     itemsCount = 0
-    batch = []
+
     result_items = results.to_dict('records')
+    batch = []
     for r in result_items:
         item = unflatten(r)
 
@@ -166,8 +181,8 @@ def uploadDocuments():
 
         batch.append(item)
         itemsCount += 1
-        sleep(0.001) # Wait a bit.
 
+        # Separate upload file in smaller fragments to avoid OS socket exeption.
         if itemsCount > 4000 or r == result_items[len(result_items)-1]:
             # Create file
             updateCloudSearch_file = open("updateTopic_" + str(docCount) + ".json", 'w', encoding="utf-8")
@@ -179,7 +194,7 @@ def uploadDocuments():
             itemsCount = 0
             batch = []
 
-    # Update index
+    # Start indexing.
     if len(result_items) > 0:
         print("Start indexing.")
         for doc in range(4):
@@ -195,5 +210,5 @@ def uploadDocuments():
 print('Extract topic from output.tar.gz file.')
 extractTopics()
 
-print('Start uploading documents to CloudSearch.')
+print('Merge files for upload.')
 uploadDocuments()

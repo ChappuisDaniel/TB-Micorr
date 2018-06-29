@@ -22,6 +22,11 @@ def parseTopicTerm():
     return df
 
 def predictTerm(input):
+    """
+    Predict a relevent term based on the user input and topic-terms file
+    from Comprehend.
+    """
+
     # Initialize topic-term-weight
     ttw = parseTopicTerm()
 
@@ -60,7 +65,7 @@ def predictTerm(input):
         suggestions.append(df.to_dict('record')[0]['topic'] + " : " + df.to_dict('record')[0]['term'])
     return suggestions
 
-
+### ____ Run sugester ____
 s = ''
 for t in range(1, len(sys.argv)):
     s += sys.argv[t] + " "

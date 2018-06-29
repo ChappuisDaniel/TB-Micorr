@@ -151,7 +151,7 @@ def testQuery(query, request):
 
     response.close()
 
-###________Main_________________________________________________________________
+### ____ Run test ____
 query_file = open("query.txt", 'w', encoding="utf-8")
 #topicsAnalysis_file = open("topicsAnalysis.txt", 'w', encoding="utf-8")
 for request in userSearchTerm:

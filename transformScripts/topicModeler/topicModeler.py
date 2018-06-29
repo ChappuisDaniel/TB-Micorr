@@ -33,6 +33,11 @@ def timeout():
     raise Exception("Waiting table 'allScraped' timeout.")
 
 def fetchDocuments():
+    """
+    Fetch all new articles in DynamoDB and export their abstract or fulltext
+    in S3 Comprehend's input Bucket.
+    """
+
     # Fetch last update time. Use for query.
     lastUpdate_file = open("lastUpdate_topic.txt", 'r', encoding="utf-8")
     lastUpdate = int(lastUpdate_file.read())
@@ -55,41 +60,43 @@ def fetchDocuments():
 
     # Fetch data from DynamoDB
     print("Fetch last documents from 'allScraped'.")
+
     # Fetch new documents.
     result_items = []
-
     response = allScraped_table.scan(
         IndexName = "last_update-id-index",
         FilterExpression = Key('last_update').between(lastUpdate, now)
-        )
-
+    )
     result_items.extend(response['Items'])
 
-    # Use this bloc for querying
+    # Perform scan through all the table for new articles.
     while 'LastEvaluatedKey' in response:
         response = allScraped_table.scan(
             IndexName = "last_update-id-index",
             FilterExpression = Key('last_update').between(lastUpdate, now),
             ExclusiveStartKey = response['LastEvaluatedKey']
         )
-
         result_items.extend(response['Items'])
 
     print("New items found : " + str(len(result_items)))
 
     for i in result_items:
-
         # Build file
         if i['fulltext'] != None:
             data = bytes(i['fulltext'], 'utf-8')
         else:
             data = bytes(i['abstract'], 'utf-8')
 
-        # Store data in S3
+        # Store abstract or fulltext in S3 Comprehend's input Bucket
         s3.put_object(Body = data, Bucket = 'micorr-comprehend-input', Key = str(i['id']))
     print('Data stored in AWS S3.')
 
-def callNLP():
+def callNLP(nbTopic):
+    """
+    Call Comprehend's Topic Medling job on S3 Comprehend's Buckets and
+    wait until it's done.
+    """
+
     # Call NLP
     comprehend = boto3.client(service_name='comprehend', region_name='us-east-1')
 
@@ -97,7 +104,7 @@ def callNLP():
     input_doc_format = "ONE_DOC_PER_FILE"
     output_s3_url = "s3://micorr-comprehend-output/"
     data_access_role_arn = "arn:aws:iam::615606584099:role/service-role/AmazonComprehendServiceRole-inoutS3"
-    number_of_topics = 25
+    number_of_topics = nbTopic
 
     input_data_config = {"S3Uri": input_s3_url, "InputFormat": input_doc_format}
     output_data_config = {"S3Uri": output_s3_url}
@@ -135,9 +142,9 @@ print('Start fetching documents on DynamoDB.')
 fetchDocuments()
 
 print('Call NLP analysis.')
-callNLP()
+callNLP(nbTopic=25)
 
-print('Download analysis output and run uploadDocs.py')
+print('Please manually download analysis output and run uploadDocs.py')
 
 # Update last_update
 lastUpdate_file = open("lastUpdate_topic.txt", 'w', encoding="utf-8")

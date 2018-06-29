@@ -17,11 +17,6 @@ NEWSPIDER_MODULE = 'micorr_crawlers.spiders'
 # Export as [spriderName].json file on AWS S3 'micorr-crawled-data' bucket
 FEED_FORMAT = "json"
 FEED_EXPORT_ENCODING = 'utf-8'
-FEED_URI = "ADD YOUR URI"
-
-# AWS API presentation_nigel_blades
-AWS_ACCESS_KEY_ID = 'ADD YOUR KEY ID'
-AWS_SECRET_ACCESS_KEY= 'ADD YOUR PRIVATE KEY'
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 USER_AGENT = 'ADD YOUR USER-AGENT'
