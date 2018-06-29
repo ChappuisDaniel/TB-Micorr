@@ -42,9 +42,10 @@ def uploadDocuments():
     df = pd.read_csv('doc-topics.csv', dtype={
                 "docname" : str,
                 "topic" : str,
-                "proportion" : str
+                "proportion" : float
             })
 
+    df = (df[df.proportion > 0.1])
 
     results = []
     for (docname), bag in df.groupby(["docname"]):
@@ -70,7 +71,6 @@ def uploadDocuments():
 
     # Fetch all data to reindex
     result_items = []
-
     response = allScraped_table.scan(
         IndexName = "last_update-id-index",
         )
@@ -107,7 +107,6 @@ def uploadDocuments():
         if i['keywords'] != None:
             doc['fields']['keywords'] = i['keywords']
 
-        # Create fullext field only if there is one. Avoid empty field.
         if i['fulltext'] != None:
             doc['fields']['fulltext'] = i['fulltext']
 
@@ -148,6 +147,23 @@ def uploadDocuments():
     result_items = results.to_dict('records')
     for r in result_items:
         item = unflatten(r)
+
+        # Treat NaN cells
+        if item['fields']['file_url'] != item['fields']['file_url']:
+            del item['fields']['file_url']
+
+        if item['fields']['keywords'] != item['fields']['keywords']:
+            del item['fields']['keywords']
+
+        if item['fields']['fulltext'] != item['fields']['fulltext']:
+            del item['fields']['fulltext']
+
+        """
+        # Test empty keywords list
+        if not item['fields']['keywords']:
+            del item['fields']['keywords']
+        """
+
         batch.append(item)
         itemsCount += 1
         sleep(0.001) # Wait a bit.
@@ -164,7 +180,7 @@ def uploadDocuments():
             batch = []
 
     # Update index
-    if if len(result_items) > 0:
+    if len(result_items) > 0:
         print("Start indexing.")
         for doc in range(4):
             #print("Upload file n°" + str(doc) + " with " + str(itemsCount) + " documents.")

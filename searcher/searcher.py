@@ -1,8 +1,6 @@
 from __future__ import print_function # Python 2/3 compatibility
 
-import boto3
 import json, csv
-from subprocess import check_output, call, run
 import requests
 
 import pandas
@@ -66,7 +64,7 @@ def createQuery(request):
     termBoost = 2
     topicBoost = 1.5
 
-    topicFilter = 0.02
+    topicFilter = 0.0
 
     # Select topics on matching term
     topics = []
@@ -78,8 +76,7 @@ def createQuery(request):
         stemmedTerm = stem(term)
         topics.append(ttw.loc[ttw['term'] == stemmedTerm])
 
-        # Seems to wide
-        #topics.append(ttw.loc[ttw['term'].str.contains(stemmedTerm)])
+        #nearTerms.append("(near+distance%3D" + str(nearDistance) + "+'" + term + "')")
         nearTerms.append("(near+distance%3D" + str(nearDistance) + "+boost%3D" + str(termBoost) + "+'" + term + "')")
 
     # Get the higher topic
@@ -98,9 +95,11 @@ def createQuery(request):
                 # Jsonify
                 best_topic = bestTopic.to_dict('records')[0]
                 #print("Best topic : \n" + json.dumps(best_topic, indent=4))
+                #queryTopics.append("(term+field%3Dtopics+'" + best_topic['topic'] + "')")
                 queryTopics.append("(term+field%3Dtopics+boost%3D" + str(topicBoost) + "+'" + best_topic['topic'] + "')")
 
             for filtredTopic in higherTopics.to_dict('records') :
+                #queryTopics.append("(term+field%3Dtopics+'" + filtredTopic['topic'] + "')")
                 queryTopics.append("(term+field%3Dtopics+boost%3D" + str(topicBoost) + "+'" + filtredTopic['topic'] + "')")
 
             #topicsAnalysis_file.write("'"+request+"'\nTopic : \n" + topic.to_string() + "\nBest topic : \n" + json.dumps(best_topic, indent=4)+"\n\n")
@@ -112,7 +111,11 @@ def createQuery(request):
     str_queryTopics = ""
     for i in queryTopics:
         str_queryTopics += i
-    # Build query
+    # Q1 : Only search words without boost
+    #query = "/2013-01-01/search?q=(and" + str_nearTerms + ")&q.parser=structured&return=title,abstract,article_type,topics&size=30"
+
+    # Q2 : With topics without boost
+    # Q3 : With topics and boost
     query = "/2013-01-01/search?q=(or+" + str_queryTopics + "(and" + str_nearTerms + "))&q.parser=structured&return=title,abstract,article_type,topics&size=30"
 
     testQuery(query=query, request=request)
@@ -129,8 +132,14 @@ def testQuery(query, request):
 
     searchResults = r.json()['hits']['hit']
 
+    order = 1
     for i in searchResults:
+        if not 'topics' in i['fields']:
+            i['fields']['topics'] = ""
+
         i['fields']['id'] = i['id']
+        i['fields']['order'] = order
+        order += 1
 
     # open a file for writing
     response = open("results/csv/"+ request +".csv", 'w', encoding="utf-8")

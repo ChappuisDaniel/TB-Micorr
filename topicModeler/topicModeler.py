@@ -97,7 +97,7 @@ def callNLP():
     input_doc_format = "ONE_DOC_PER_FILE"
     output_s3_url = "s3://micorr-comprehend-output/"
     data_access_role_arn = "arn:aws:iam::615606584099:role/service-role/AmazonComprehendServiceRole-inoutS3"
-    number_of_topics = 100
+    number_of_topics = 25
 
     input_data_config = {"S3Uri": input_s3_url, "InputFormat": input_doc_format}
     output_data_config = {"S3Uri": output_s3_url}

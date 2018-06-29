@@ -108,4 +108,9 @@ updater/updateCloudSearch.json
 *.json
 *.gz
 *.csv
-*.txt
+
+searcher/distinctTerm.txt
+searcher/query.txt
+searcher/topicsAnalysis.txt
+topicModeler/analysis/NLP_Analysis.xlsx
+searcher/results/_results.xlsx

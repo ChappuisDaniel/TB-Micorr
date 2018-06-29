@@ -1,9 +1,7 @@
 from __future__ import print_function # Python 2/3 compatibility
+
 import sys
-import boto3
 import json, csv
-from subprocess import check_output, call, run
-import requests
 
 import pandas
 from pandas.io.json import json_normalize
@@ -59,7 +57,7 @@ def predictTerm(input):
         df = ttw.loc[ttw['topic'] == topic]
         #suggestions.append(df.to_dict('record')[1]['term'])
         df = df.loc[[df['weight'].idxmax()]]
-        suggestions.append(df.to_dict('record')[0]['term'])
+        suggestions.append(df.to_dict('record')[0]['topic'] + " : " + df.to_dict('record')[0]['term'])
     return suggestions
 
 
