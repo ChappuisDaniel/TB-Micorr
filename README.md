@@ -12,11 +12,26 @@ Once it is installed, run the Anaconda Prompt and the followings commands to ins
 
 > conda install -c anaconda boto3 
 
+Please note that boto needs AWS user keys to allow the scripts to work with AWS APIs. Refer to AWS documentation to learn how to assign premissions to a user and get the key pair.
+
 We need to install BeatifulSoup Library. It is use to clean fetched data of all HTML tags and clean the text we'll submit to AWS Comprehend.
 
 > pip install beautifulsoup4
 
-Installation is ready.
+Installation for Scrapy's bots is ready.
+
+### Transformation scripts
+For convinence, I decided to add transformation scripts in this project since the main goal is to load scraped data into the CloudSearch search domain. Here are the other python package we need to install.
+
+The first one is a stemming library for english words.
+
+> pip install stemming
+
+Both other libraries are use for handeling data during transformation and analysis.
+
+> conda install -c anaconda pandas
+
+> pip install unflatten
 
 ## Configuration AWSCLI
 AWSCLI is needed to allow our robot to call for Amazon Services.
@@ -46,5 +61,7 @@ Please take care to fill the bank with your own and rename the file **settings.p
 
 ## Documentation
 Here is [Scrapy](https://doc.scrapy.org/en/latest/index.html) and [Boto3](https://boto3.readthedocs.io/en/latest/) documentation.
+
+
 
 
