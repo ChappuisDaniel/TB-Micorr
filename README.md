@@ -1,8 +1,18 @@
-# Micorr-Crawlers
+# TB - Micorr
 Scrapy bot for MiCorr
 
 This repo contains the source code for bots using Scrapy. Their goal is to crawl research journal and scrap data about the article.
 To use them, follow the steps bellow.
+
+In addition, it also contains the transformation scripts that take the data fetched by Scrapy and index them after semantic analysis.
+
+This ReadMe covers all the installation needs, and provid a quick overview on the project. All scripts are commented so it should be easy to understand.
+
+The four main transformation sctipts are :
+* topicModeler.py, collects data and run a semantic analysis.
+* uploadDocs.py, upload transformed documents in CloudSearch domain.
+* searcher.py, perform test search queries on search domain.
+* suggester.py, demonstrate the use of a term suggestion script based on semantic data.
 
 ## Installation
 On Windows we need to install a Python environment. [Miniconda](https://conda.io/miniconda.html) work perfectly fine for the job.
